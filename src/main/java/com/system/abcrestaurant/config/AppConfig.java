@@ -20,9 +20,22 @@ import java.util.Collections;
 @EnableWebSecurity
 public class AppConfig {
 
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(Authorize -> Authorize
+                        .requestMatchers("/api/admin/**").hasAnyRole("STAFF", "ADMIN")
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
+                ).addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-    private CorsConfigurationSource corsConfigrationSource() {
+        return http.build();
+    }
+
+    private CorsConfigurationSource corsConfigurationSource() {
 
         return new CorsConfigurationSource() {
             @Override
